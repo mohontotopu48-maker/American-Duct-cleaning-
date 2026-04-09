@@ -294,3 +294,44 @@ Stage Summary:
 - 6 social media platform cards with branded colors and hover effects
 - Map visual card with "Get Directions" external link to Google Maps
 - Lint clean, dev server running successfully (GET / 200)
+
+---
+Task ID: 2
+Agent: Single-Page Website Builder
+Task: Build complete American Duct Cleaning single-page website with all sections on / route
+
+Work Log:
+- Read worklog.md and reviewed project state (existing multi-page router architecture with pages/)
+- Updated Prisma schema with ContactSubmission model (uuid, name, email, phone, service, message, type, createdAt)
+- Ran `bun run db:push` to sync schema to SQLite database
+- Created `/api/contact` POST endpoint for form submissions (contact & quote types)
+- Replaced multi-page router architecture with single-page scroll design on / route
+- Built 12 components:
+  1. **Header** (src/components/layout/Header.tsx) — Sticky nav with navy bg, logo, smooth-scroll nav links (Home/Services/About/Why Us/Areas/Contact), "Get Free Quote" CTA, phone number, mobile hamburger Sheet menu, transparent-to-solid on scroll
+  2. **Footer** (src/components/layout/Footer.tsx) — Dark navy, 4-column grid (company info + socials, quick links, services list, contact info), copyright, licensed badge, sticky to bottom via mt-auto
+  3. **QuoteDialog** (src/components/QuoteDialog.tsx) — shadcn Dialog with branded header, form fields (name, email, phone, service Select, preferred date, message), submits to /api/contact with type="quote", sonner toasts
+  4. **HeroSection** — Full-screen with hero-bg.png background, gradient overlay, "Breathe Cleaner Air" headline with orange accent, subheadline, dual CTAs (Get Free Quote + Our Services), 4 trust badges, phone CTA, hero-tech.png image with floating cards (4.9 rating, 15+ years), scroll indicator, Framer Motion entrance animations
+  5. **ServicesSection** — 6 service cards in responsive grid (1/2/3 cols), each with image, title, description, "Learn More" link, hover scale+shadow, staggered scroll animations
+  6. **AboutSection** — Two-column (image + text), company story (founded 2009), about-hero.png with floating about-team.png and "15+" badge, 4 values grid, stats row (15+ Years, 10,000+ Homes, 50,000+ Ducts, 4.9 Rating)
+  7. **WhyChooseSection** — 4 trust reason cards with icons (NADCA, Advanced Equipment, Satisfaction Guaranteed, Eco-Friendly), 4-step process on navy background (Schedule, Inspect, Clean, Enjoy) with connector lines
+  8. **ServiceAreasSection** — 20 Orange County cities as interactive pills with MapPin icons, "Don't see your city?" CTA card with phone number
+  9. **TestimonialsSection** — 5 customer review cards with star ratings, Quote icon accent, testimonials.png background decoration, staggered fade-in
+  10. **FAQSection** — 8 FAQs using shadcn Accordion component, styled with rounded cards
+  11. **ContactSection** — Two-column layout (form + business info), form with name/email/phone/service Select/message, submits to /api/contact, contact-office.png image, 4 info cards, sonner toasts
+  12. **CTASection** — Full-width orange gradient background, "Ready for Cleaner Air?" headline, dual CTAs (Call Now + Request Free Quote Online)
+- **Main page.tsx** — "use client", imports all sections, manages quote dialog state, renders all sections in order, back-to-top floating button with AnimatePresence
+- All sections use Framer Motion whileInView scroll animations
+- All sections fully responsive (mobile-first with sm/md/lg breakpoints)
+- Brand colors: navy #0A2540, orange #F97316, gray #F3F4F6 (via CSS variables)
+- Used shadcn/ui components: Button, Dialog, Sheet, Accordion, Input, Textarea, Select, Label
+- next/image with unoptimized prop for local images
+- Smooth scroll navigation via document.getElementById().scrollIntoView({behavior:'smooth'})
+- ESLint passes clean with zero errors
+- Dev server renders successfully (GET / 200)
+
+Stage Summary:
+- Complete single-page website rebuilt from scratch replacing multi-page router architecture
+- All 9 content sections + header/footer/quote dialog implemented
+- Contact/Quote forms persist to SQLite via Prisma ContactSubmission model
+- Fully responsive, accessible, animated, and production-ready
+- Lint clean, dev server running successfully (GET / 200)

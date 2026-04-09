@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { X, Send, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -8,10 +14,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -19,144 +21,189 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner";
+
+interface QuoteDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  defaultService?: string;
+}
+
+const serviceOptions = [
+  "Air Duct Cleaning",
+  "HVAC System Cleaning",
+  "Dryer Vent Cleaning",
+  "Mold Remediation",
+  "Air Quality Testing",
+  "Commercial Cleaning",
+  "Other",
+];
 
 export function QuoteDialog({
   open,
   onOpenChange,
   defaultService,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  defaultService?: string;
-}) {
-  const [submitting, setSubmitting] = useState(false);
+}: QuoteDialogProps) {
+  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     name: "",
-    phone: "",
     email: "",
-    service: "",
+    phone: "",
+    service: defaultService || "",
+    date: "",
     message: "",
   });
 
-  useEffect(() => {
-    if (open) {
-      setForm((f) => ({
-        ...f,
-        service: defaultService || "",
-        name: "",
-        phone: "",
-        email: "",
-        message: "",
-      }));
-    }
-  }, [open, defaultService]);
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
-  async function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.phone || !form.service) {
-      toast.error("Please fill in your name, phone, and select a service.");
+    if (!form.name || !form.email || !form.service) {
+      toast.error("Please fill in all required fields.");
       return;
     }
-    setSubmitting(true);
+    setLoading(true);
     try {
-      const res = await fetch("/api/quote", {
+      const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, type: "quote" }),
       });
       if (res.ok) {
-        toast.success("Quote request submitted! We'll contact you within 24 hours.");
-        setForm({ name: "", phone: "", email: "", service: "", message: "" });
+        toast.success("Quote request sent! We'll contact you soon.");
+        setForm({
+          name: "",
+          email: "",
+          phone: "",
+          service: "",
+          date: "",
+          message: "",
+        });
         onOpenChange(false);
       } else {
         toast.error("Something went wrong. Please try again.");
       }
     } catch {
-      toast.error("Network error. Please check your connection.");
+      toast.error("Network error. Please try again.");
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md p-6 max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-brand-navy">
-            Get Your Free Quote
-          </DialogTitle>
-          <DialogDescription className="text-brand-muted">
-            Fill in the details and we&apos;ll get back to you within 24 hours.
-          </DialogDescription>
+      <DialogContent className="sm:max-w-md bg-white p-0 overflow-hidden">
+        <DialogHeader className="bg-brand-navy text-white px-6 py-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <DialogTitle className="text-lg font-bold">
+                Get Your Free Quote
+              </DialogTitle>
+              <DialogDescription className="text-white/70 text-sm mt-1">
+                Fill in the form below and we&apos;ll get back to you within 1 hour.
+              </DialogDescription>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-brand-orange/20 flex items-center justify-center">
+              <Send className="w-5 h-5 text-brand-orange" />
+            </div>
+          </div>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="q-name">Full Name *</Label>
+            <Label htmlFor="quote-name">Full Name *</Label>
             <Input
-              id="q-name"
-              placeholder="John Smith"
+              id="quote-name"
+              name="name"
               value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              onChange={handleChange}
+              placeholder="John Smith"
               required
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="q-phone">Phone Number *</Label>
-            <Input
-              id="q-phone"
-              type="tel"
-              placeholder="(714) 555-0123"
-              value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              required
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="quote-email">Email *</Label>
+              <Input
+                id="quote-email"
+                name="email"
+                type="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="john@email.com"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="quote-phone">Phone</Label>
+              <Input
+                id="quote-phone"
+                name="phone"
+                type="tel"
+                value={form.phone}
+                onChange={handleChange}
+                placeholder="(714) 555-0192"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="quote-service">Service *</Label>
+              <Select
+                value={form.service}
+                onValueChange={(val) =>
+                  setForm({ ...form, service: val })
+                }
+              >
+                <SelectTrigger id="quote-service">
+                  <SelectValue placeholder="Select service" />
+                </SelectTrigger>
+                <SelectContent>
+                  {serviceOptions.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="quote-date">Preferred Date</Label>
+              <Input
+                id="quote-date"
+                name="date"
+                type="date"
+                value={form.date}
+                onChange={handleChange}
+              />
+            </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="q-email">Email</Label>
-            <Input
-              id="q-email"
-              type="email"
-              placeholder="john@example.com"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="q-service">Service Needed *</Label>
-            <Select
-              value={form.service}
-              onValueChange={(val) => setForm({ ...form, service: val })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a service" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Air Duct Cleaning">Air Duct Cleaning</SelectItem>
-                <SelectItem value="Dryer Vent Cleaning">Dryer Vent Cleaning</SelectItem>
-                <SelectItem value="HVAC System Cleaning">HVAC System Cleaning</SelectItem>
-                <SelectItem value="Mold Inspection & Removal">Mold Inspection &amp; Removal</SelectItem>
-                <SelectItem value="Indoor Air Quality Testing">Indoor Air Quality Testing</SelectItem>
-                <SelectItem value="General Inspection">General Inspection</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="q-msg">Additional Details</Label>
+            <Label htmlFor="quote-message">Message</Label>
             <Textarea
-              id="q-msg"
+              id="quote-message"
+              name="message"
+              value={form.message}
+              onChange={handleChange}
               placeholder="Tell us about your needs..."
               rows={3}
-              value={form.message}
-              onChange={(e) => setForm({ ...form, message: e.target.value })}
             />
           </div>
           <Button
             type="submit"
-            className="w-full bg-brand-orange hover:bg-brand-orange-hover text-white font-semibold py-3 text-base"
-            disabled={submitting}
+            disabled={loading}
+            className="w-full bg-brand-orange hover:bg-brand-orange-hover text-white font-semibold py-3 rounded-lg transition-all"
           >
-            {submitting ? "Submitting..." : "Request Free Quote"}
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Sending...
+              </>
+            ) : (
+              "Submit Quote Request"
+            )}
           </Button>
         </form>
       </DialogContent>
