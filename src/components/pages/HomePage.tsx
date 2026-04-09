@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useRef } from "react";
-import { motion, useInView } from "framer-motion";
+import React, { useRef, useState, useEffect } from "react";
+import { motion, useInView, AnimatePresence } from "framer-motion";
 import { useRouter } from "@/components/shared/Router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,8 +25,14 @@ import {
   Zap,
   ThumbsUp,
   ChevronRight,
+  ChevronDown,
   Quote,
+  ArrowUp,
+  Eye,
+  Wrench,
+  CloudRain,
 } from "lucide-react";
+import { LucideIcon } from "lucide-react";
 
 /* ────────────────────────────────────────────────
    Local animation helper
@@ -98,6 +104,197 @@ function SectionHeading({
     </div>
   );
 }
+
+/* ────────────────────────────────────────────────
+   Trust Ticker Marquee
+   ──────────────────────────────────────────────── */
+const tickerItems = [
+  "NADCA Certified",
+  "EPA Compliant",
+  "5,000+ Homes Cleaned",
+  "4.9 Star Rating",
+  "Licensed & Insured",
+  "Same-Day Service",
+  "Free Estimates",
+  "Orange County's #1",
+];
+
+function TrustTicker() {
+  return (
+    <section className="relative bg-brand-navy-dark py-4 overflow-hidden">
+      {/* Gradient fade edges */}
+      <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-brand-navy-dark to-transparent z-10" />
+      <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-brand-navy-dark to-transparent z-10" />
+
+      <div className="flex animate-marquee whitespace-nowrap">
+        {[...tickerItems, ...tickerItems, ...tickerItems, ...tickerItems].map(
+          (item, i) => (
+            <span
+              key={i}
+              className="mx-8 text-sm md:text-base font-medium text-white/70 flex items-center gap-3 shrink-0"
+            >
+              <CheckCircle2 className="h-4 w-4 text-brand-orange shrink-0" />
+              {item}
+            </span>
+          )
+        )}
+      </div>
+
+      <style jsx>{`
+        @keyframes marquee {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+        .animate-marquee {
+          animation: marquee 30s linear infinite;
+        }
+      `}</style>
+    </section>
+  );
+}
+
+/* ────────────────────────────────────────────────
+   Scroll Down Indicator
+   ──────────────────────────────────────────────── */
+function ScrollDownIndicator() {
+  const scrollToContent = () => {
+    const nextSection = document.getElementById("problem-section");
+    if (nextSection) {
+      nextSection.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  return (
+    <button
+      onClick={scrollToContent}
+      className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 text-white/60 hover:text-white/90 transition-colors cursor-pointer group"
+      aria-label="Scroll down"
+    >
+      <span className="text-xs uppercase tracking-widest font-medium">
+        Scroll Down
+      </span>
+      <motion.div
+        animate={{ y: [0, 8, 0] }}
+        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+      >
+        <ChevronDown className="h-6 w-6" />
+      </motion.div>
+    </button>
+  );
+}
+
+/* ────────────────────────────────────────────────
+   Back to Top Button
+   ──────────────────────────────────────────────── */
+function BackToTopButton() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setVisible(window.scrollY > 400);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.button
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          transition={{ duration: 0.2 }}
+          onClick={scrollToTop}
+          className="fixed bottom-8 right-8 z-50 bg-brand-orange hover:bg-brand-orange-hover text-white p-3 rounded-full shadow-lg shadow-brand-orange/25 transition-colors cursor-pointer"
+          aria-label="Back to top"
+        >
+          <ArrowUp className="h-5 w-5" />
+        </motion.button>
+      )}
+    </AnimatePresence>
+  );
+}
+
+/* ────────────────────────────────────────────────
+   Recent Projects Data
+   ──────────────────────────────────────────────── */
+const recentProjects = [
+  {
+    icon: Wind,
+    type: "Air Duct Cleaning",
+    location: "Irvine, CA",
+    description:
+      "Full system cleaning for a 3,200 sq ft home. Removed 15 years of dust buildup and restored airflow efficiency by 40%.",
+    slug: "air-duct-cleaning",
+    gradient: "from-brand-navy/80 to-brand-navy-light/80",
+    accentColor: "bg-blue-500/20",
+    iconColor: "text-blue-400",
+  },
+  {
+    icon: Flame,
+    type: "Dryer Vent Cleaning",
+    location: "Anaheim, CA",
+    description:
+      "Emergency vent cleaning after homeowner noticed burning smell. Removed 8 feet of compacted lint from a blocked vent.",
+    slug: "dryer-vent-cleaning",
+    gradient: "from-red-900/80 to-orange-800/80",
+    accentColor: "bg-red-500/20",
+    iconColor: "text-red-400",
+  },
+  {
+    icon: Search,
+    type: "Mold Remediation",
+    location: "Huntington Beach, CA",
+    description:
+      "Complete mold removal from ductwork affected by coastal humidity. Applied antimicrobial sealant for lasting protection.",
+    slug: "mold-removal",
+    gradient: "from-emerald-900/80 to-teal-800/80",
+    accentColor: "bg-emerald-500/20",
+    iconColor: "text-emerald-400",
+  },
+  {
+    icon: HomeIcon,
+    type: "HVAC System Cleaning",
+    location: "Santa Ana, CA",
+    description:
+      "Deep HVAC cleaning including evaporator coils and blower motor. Reduced energy bills by 18% in the first month.",
+    slug: "hvac-cleaning",
+    gradient: "from-violet-900/80 to-purple-800/80",
+    accentColor: "bg-violet-500/20",
+    iconColor: "text-violet-400",
+  },
+  {
+    icon: Sparkles,
+    type: "Air Quality Testing",
+    location: "Newport Beach, CA",
+    description:
+      "Comprehensive air quality audit for a family with allergy concerns. Identified elevated VOCs and provided action plan.",
+    slug: "air-quality-testing",
+    gradient: "from-cyan-900/80 to-sky-800/80",
+    accentColor: "bg-cyan-500/20",
+    iconColor: "text-cyan-400",
+  },
+  {
+    icon: Wrench,
+    type: "Air Duct Repair & Seal",
+    location: "Yorba Linda, CA",
+    description:
+      "Duct sealing and repair for a 20-year-old system. Fixed 4 leaks and sealed all connections for maximum efficiency.",
+    slug: "air-duct-cleaning",
+    gradient: "from-amber-900/80 to-yellow-800/80",
+    accentColor: "bg-amber-500/20",
+    iconColor: "text-amber-400",
+  },
+];
 
 /* ────────────────────────────────────────────────
    HomePage
@@ -309,12 +506,20 @@ export function HomePage({
             </motion.div>
           </div>
         </div>
+
+        {/* Scroll Down Indicator */}
+        <ScrollDownIndicator />
       </section>
+
+      {/* ═══════════════════════════════════════════
+          TRUST TICKER MARQUEE
+          ═══════════════════════════════════════════ */}
+      <TrustTicker />
 
       {/* ═══════════════════════════════════════════
           2. PROBLEM SECTION
           ═══════════════════════════════════════════ */}
-      <section className="py-20 md:py-28 bg-brand-gray">
+      <section id="problem-section" className="py-20 md:py-28 bg-brand-gray">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* left – 2×2 hazard grid */}
@@ -606,7 +811,67 @@ export function HomePage({
       </section>
 
       {/* ═══════════════════════════════════════════
-          8. CTA BANNER
+          8. RECENT PROJECTS SECTION
+          ═══════════════════════════════════════════ */}
+      <section className="py-20 md:py-28 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FadeInSection>
+            <SectionHeading
+              badge="Recent Projects"
+              title="Our Latest Work"
+              description="See the quality of our work through our recent projects across Orange County."
+            />
+          </FadeInSection>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {recentProjects.map((project, i) => (
+              <FadeInSection key={`${project.type}-${project.location}`} delay={i * 0.08}>
+                <Card className="border-0 shadow-sm hover:shadow-xl transition-all duration-300 h-full group overflow-hidden bg-white">
+                  {/* Gradient placeholder with icon */}
+                  <div
+                    className={`relative h-44 bg-gradient-to-br ${project.gradient} flex items-center justify-center overflow-hidden`}
+                  >
+                    {/* Subtle pattern overlay */}
+                    <div className="absolute inset-0 opacity-10">
+                      <div className="absolute top-4 right-4 w-24 h-24 border border-white/30 rounded-full" />
+                      <div className="absolute bottom-4 left-4 w-16 h-16 border border-white/20 rounded-full" />
+                    </div>
+                    <div className={`p-4 rounded-2xl ${project.accentColor}`}>
+                      <project.icon className={`h-10 w-10 ${project.iconColor}`} />
+                    </div>
+                    {/* Location badge */}
+                    <div className="absolute bottom-3 left-3 flex items-center gap-1.5 bg-black/30 backdrop-blur-sm text-white text-xs font-medium px-3 py-1.5 rounded-full">
+                      <MapPin className="h-3 w-3" />
+                      {project.location}
+                    </div>
+                  </div>
+
+                  <CardContent className="p-6 flex flex-col h-full">
+                    <h3 className="text-lg font-bold text-brand-navy mb-2">
+                      {project.type}
+                    </h3>
+                    <p className="text-brand-muted leading-relaxed text-sm mb-5 flex-grow">
+                      {project.description}
+                    </p>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1.5 text-brand-orange hover:text-brand-orange-hover font-semibold transition-colors self-start"
+                      onClick={() => navigate("service-detail", project.slug)}
+                    >
+                      <Eye className="h-4 w-4" />
+                      View Details
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </CardContent>
+                </Card>
+              </FadeInSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════
+          9. CTA BANNER
           ═══════════════════════════════════════════ */}
       <section className="py-20 md:py-28 bg-brand-orange relative overflow-hidden">
         {/* decorative circles */}
@@ -649,6 +914,11 @@ export function HomePage({
           </FadeInSection>
         </div>
       </section>
+
+      {/* ═══════════════════════════════════════════
+          BACK TO TOP BUTTON
+          ═══════════════════════════════════════════ */}
+      <BackToTopButton />
     </>
   );
 }
