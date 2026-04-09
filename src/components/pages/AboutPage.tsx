@@ -190,7 +190,7 @@ export function AboutPage() {
   };
 
   return (
-    <main>
+    <div>
       {/* ═══════════════════════════════════════════
           1. PAGE HERO
           ═══════════════════════════════════════════ */}
@@ -685,6 +685,6 @@ export function AboutPage() {
           </motion.button>
         )}
       </AnimatePresence>
-    </main>
+    </div>
   );
 }

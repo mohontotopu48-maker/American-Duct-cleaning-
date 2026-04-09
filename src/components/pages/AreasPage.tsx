@@ -269,7 +269,7 @@ export function AreasPage() {
   );
 
   return (
-    <main>
+    <div>
       {/* ═══════════════════════════════════════════
           1. PAGE HERO
           ═══════════════════════════════════════════ */}
@@ -825,6 +825,6 @@ export function AreasPage() {
           </FadeInSection>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

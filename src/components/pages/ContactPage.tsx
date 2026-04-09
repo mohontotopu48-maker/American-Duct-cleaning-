@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useRouter } from "@/components/shared/Router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,6 +34,7 @@ import {
   Award,
   ShieldCheck,
   CheckCircle2,
+  ExternalLink,
 } from "lucide-react";
 import { motion, useInView } from "framer-motion";
 import { toast } from "sonner";
@@ -95,6 +96,84 @@ const contactCards = [
   },
 ];
 
+const promiseItems = [
+  {
+    icon: DollarSign,
+    title: "Free Estimates Always",
+    desc: "Transparent, no-cost quotes for every service — no hidden fees, no surprises.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "No Obligation",
+    desc: "Get expert advice and pricing with zero pressure to commit.",
+  },
+  {
+    icon: Clock,
+    title: "Response Within 1 Hour",
+    desc: "We know your time matters. Expect a reply within 60 minutes during business hours.",
+  },
+  {
+    icon: CheckCircle2,
+    title: "100% Satisfaction Guaranteed",
+    desc: "Not happy? We'll come back and make it right — that's our promise to you.",
+  },
+];
+
+const businessHours = [
+  { day: "Monday", time: "8:00 AM - 6:00 PM" },
+  { day: "Tuesday", time: "8:00 AM - 6:00 PM" },
+  { day: "Wednesday", time: "8:00 AM - 6:00 PM" },
+  { day: "Thursday", time: "8:00 AM - 6:00 PM" },
+  { day: "Friday", time: "8:00 AM - 6:00 PM" },
+  { day: "Saturday", time: "9:00 AM - 4:00 PM" },
+  { day: "Sunday", time: "Closed" },
+];
+
+const socialPlatforms = [
+  {
+    name: "Facebook",
+    tagline: "Like us for tips & updates",
+    initials: "f",
+    color: "bg-[#1877F2]",
+    link: "#",
+  },
+  {
+    name: "Instagram",
+    tagline: "Follow our before & afters",
+    initials: "IG",
+    color: "bg-gradient-to-br from-[#F58529] via-[#DD2A7B] to-[#8134AF]",
+    link: "#",
+  },
+  {
+    name: "Google Business",
+    tagline: "Read 500+ verified reviews",
+    initials: "G",
+    color: "bg-[#4285F4]",
+    link: "#",
+  },
+  {
+    name: "Yelp",
+    tagline: "See our 4.9-star rating",
+    initials: "Y!",
+    color: "bg-[#FF1A1A]",
+    link: "#",
+  },
+  {
+    name: "Nextdoor",
+    tagline: "Neighborhood recommendations",
+    initials: "Nd",
+    color: "bg-[#00B551]",
+    link: "#",
+  },
+  {
+    name: "BBB",
+    tagline: "A+ accredited business",
+    initials: "BBB",
+    color: "bg-[#0E5EA2]",
+    link: "#",
+  },
+];
+
 const whyChooseUs = [
   {
     icon: DollarSign,
@@ -151,6 +230,38 @@ const faqs = [
   },
 ];
 
+/* ─── Open/Closed helper ─── */
+function useBusinessStatus() {
+  const [status, setStatus] = useState<"open" | "closed">("closed");
+
+  useEffect(() => {
+    function checkStatus() {
+      const now = new Date();
+      const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+      const timeInMinutes = hours * 60 + minutes;
+
+      if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+        // Mon-Fri: 8AM-6PM (480-1080)
+        setStatus(timeInMinutes >= 480 && timeInMinutes < 1080 ? "open" : "closed");
+      } else if (dayOfWeek === 6) {
+        // Sat: 9AM-4PM (540-960)
+        setStatus(timeInMinutes >= 540 && timeInMinutes < 960 ? "open" : "closed");
+      } else {
+        // Sunday: Closed
+        setStatus("closed");
+      }
+    }
+
+    checkStatus();
+    const interval = setInterval(checkStatus, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return status;
+}
+
 export function ContactPage() {
   const { navigate } = useRouter();
   const [submitting, setSubmitting] = useState(false);
@@ -161,7 +272,9 @@ export function ContactPage() {
     service: "",
     date: "",
     message: "",
+    referral: "",
   });
+  const businessStatus = useBusinessStatus();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -178,7 +291,15 @@ export function ContactPage() {
       });
       if (res.ok) {
         toast.success("Message sent successfully! We'll get back to you shortly.");
-        setForm({ name: "", email: "", phone: "", service: "", date: "", message: "" });
+        setForm({
+          name: "",
+          email: "",
+          phone: "",
+          service: "",
+          date: "",
+          message: "",
+          referral: "",
+        });
       } else {
         toast.error("Something went wrong. Please try again.");
       }
@@ -190,7 +311,7 @@ export function ContactPage() {
   }
 
   return (
-    <main>
+    <div>
       {/* ═══════════════════════════════════════════
           1. PAGE HERO
           ═══════════════════════════════════════════ */}
@@ -198,6 +319,7 @@ export function ContactPage() {
         {/* Decorative elements */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-brand-orange/5 rounded-full -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-72 h-72 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+        <div className="absolute top-1/2 left-1/4 w-48 h-48 bg-brand-orange/5 rounded-full blur-3xl" />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <FadeInSection>
@@ -222,14 +344,40 @@ export function ContactPage() {
             </h1>
 
             <p className="text-lg md:text-xl text-white/80 max-w-2xl leading-relaxed">
-              Have questions or ready to schedule? We&apos;re here to help.
+              Have questions or ready to schedule? We&apos;re here to help 7 days
+              a week.
             </p>
           </FadeInSection>
         </div>
       </section>
 
       {/* ═══════════════════════════════════════════
-          2. CONTACT GRID
+          2. OUR PROMISE
+          ═══════════════════════════════════════════ */}
+      <section className="bg-white py-16 border-b border-brand-gray">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+            {promiseItems.map((item, i) => (
+              <FadeInSection key={item.title} delay={i * 0.1}>
+                <div className="text-center group">
+                  <div className="bg-brand-orange/10 group-hover:bg-brand-orange/20 transition-colors w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <item.icon className="h-7 w-7 text-brand-orange" />
+                  </div>
+                  <h3 className="text-base md:text-lg font-bold text-brand-navy mb-2">
+                    {item.title}
+                  </h3>
+                  <p className="text-sm text-brand-muted leading-relaxed">
+                    {item.desc}
+                  </p>
+                </div>
+              </FadeInSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════
+          3. CONTACT GRID
           ═══════════════════════════════════════════ */}
       <section className="bg-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -340,6 +488,39 @@ export function ContactPage() {
                       />
                     </div>
 
+                    {/* How did you hear about us? */}
+                    <div className="space-y-2">
+                      <Label htmlFor="contact-referral">
+                        How did you hear about us?
+                      </Label>
+                      <Select
+                        value={form.referral}
+                        onValueChange={(val) =>
+                          setForm({ ...form, referral: val })
+                        }
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select an option" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Google Search">
+                            Google Search
+                          </SelectItem>
+                          <SelectItem value="Yelp">Yelp</SelectItem>
+                          <SelectItem value="Referral">
+                            Referral
+                          </SelectItem>
+                          <SelectItem value="Social Media">
+                            Social Media
+                          </SelectItem>
+                          <SelectItem value="Flyer/Mailer">
+                            Flyer/Mailer
+                          </SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
                     {/* Message */}
                     <div className="space-y-2">
                       <Label htmlFor="contact-message">Message</Label>
@@ -427,9 +608,177 @@ export function ContactPage() {
       </section>
 
       {/* ═══════════════════════════════════════════
-          3. WHY CHOOSE US
+          4. BUSINESS HOURS TABLE
           ═══════════════════════════════════════════ */}
       <section className="bg-brand-gray py-20">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FadeInSection>
+            <div className="text-center mb-10">
+              <h2 className="text-3xl md:text-4xl font-bold text-brand-navy mb-4 leading-tight">
+                Business Hours
+              </h2>
+              <p className="text-lg text-brand-muted leading-relaxed">
+                We keep convenient hours to serve you better.
+              </p>
+            </div>
+          </FadeInSection>
+
+          <FadeInSection delay={0.1}>
+            <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-brand-navy text-white">
+                    <th className="text-left py-4 px-6 font-semibold text-sm uppercase tracking-wide">
+                      Day
+                    </th>
+                    <th className="text-right py-4 px-6 font-semibold text-sm uppercase tracking-wide">
+                      Hours
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {businessHours.map((row, i) => {
+                    const isAlt = i % 2 === 1;
+                    return (
+                      <tr
+                        key={row.day}
+                        className={
+                          isAlt
+                            ? "bg-brand-gray/50"
+                            : "bg-white"
+                        }
+                      >
+                        <td className="py-4 px-6 font-medium text-brand-navy">
+                          {row.day}
+                        </td>
+                        <td className="py-4 px-6 text-right text-brand-muted">
+                          {row.time}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+
+              {/* Open/Closed Badge */}
+              <div className="px-6 py-4 border-t border-brand-gray flex items-center justify-between">
+                <span className="text-sm font-medium text-brand-muted">
+                  Current Status
+                </span>
+                <Badge
+                  className={
+                    businessStatus === "open"
+                      ? "bg-emerald-100 text-emerald-700 border-0 px-4 py-1.5 text-sm font-semibold"
+                      : "bg-red-100 text-red-700 border-0 px-4 py-1.5 text-sm font-semibold"
+                  }
+                >
+                  {businessStatus === "open" ? "Open Now" : "Closed"}
+                </Badge>
+              </div>
+            </div>
+          </FadeInSection>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════
+          5. SOCIAL MEDIA LINKS
+          ═══════════════════════════════════════════ */}
+      <section className="bg-white py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FadeInSection>
+            <div className="text-center mb-12">
+              <Badge
+                variant="secondary"
+                className="mb-4 px-4 py-1.5 text-sm font-medium bg-brand-orange/10 text-brand-orange hover:bg-brand-orange/20 border-0"
+              >
+                Connect With Us
+              </Badge>
+              <h2 className="text-3xl md:text-4xl font-bold text-brand-navy mb-4 leading-tight">
+                Follow Us
+              </h2>
+              <p className="text-lg text-brand-muted leading-relaxed max-w-2xl mx-auto">
+                Stay connected for tips, promotions, and behind-the-scenes looks at our work.
+              </p>
+            </div>
+          </FadeInSection>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            {socialPlatforms.map((platform, i) => (
+              <FadeInSection key={platform.name} delay={i * 0.08}>
+                <a
+                  href={platform.link}
+                  className="block group"
+                  aria-label={`Follow us on ${platform.name}`}
+                >
+                  <div className="bg-brand-gray hover:bg-brand-navy rounded-xl p-5 text-center transition-all duration-300 hover:shadow-lg h-full">
+                    <div
+                      className={`${platform.color} w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 text-white font-bold text-lg transition-transform group-hover:scale-110`}
+                    >
+                      {platform.initials}
+                    </div>
+                    <h3 className="text-sm font-bold text-brand-navy group-hover:text-white transition-colors mb-1">
+                      {platform.name}
+                    </h3>
+                    <p className="text-xs text-brand-muted group-hover:text-white/70 transition-colors">
+                      {platform.tagline}
+                    </p>
+                  </div>
+                </a>
+              </FadeInSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════
+          6. MAP VISUAL
+          ═══════════════════════════════════════════ */}
+      <section className="bg-brand-gray py-20">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FadeInSection>
+            <div className="bg-brand-navy/5 rounded-2xl p-8 md:p-12 text-center relative overflow-hidden">
+              {/* Decorative grid pattern */}
+              <div className="absolute inset-0 opacity-[0.03]" style={{
+                backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%230A2540' fill-opacity='1'%3E%3Cpath d='M0 0h1v1H0zM20 0h1v1h-1zM40 0h1v1h-1zM0 20h1v1H0zM20 20h1v1h-1zM40 20h1v1h-1zM0 40h1v1H0zM20 40h1v1h-1zM40 40h1v1h-1z'/%3E%3C/g%3E%3C/svg%3E\")",
+              }} />
+
+              <div className="relative">
+                <div className="bg-brand-orange/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <MapPin className="h-10 w-10 text-brand-orange" />
+                </div>
+
+                <h2 className="text-3xl md:text-4xl font-bold text-brand-navy mb-3 leading-tight">
+                  Orange County, CA
+                </h2>
+                <p className="text-lg text-brand-muted mb-8 max-w-xl mx-auto leading-relaxed">
+                  Serving all of Orange County — from Anaheim to Irvine, Huntington Beach to Newport Beach.
+                </p>
+
+                <Button
+                  size="lg"
+                  className="bg-brand-navy hover:bg-brand-navy-dark text-white font-semibold px-8 py-3 rounded-lg shadow-md"
+                  asChild
+                >
+                  <a
+                    href="https://maps.google.com/?q=Orange+County+CA"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    Get Directions
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </a>
+                </Button>
+              </div>
+            </div>
+          </FadeInSection>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════
+          7. WHY CHOOSE US
+          ═══════════════════════════════════════════ */}
+      <section className="bg-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <FadeInSection>
             <div className="text-center max-w-3xl mx-auto mb-14">
@@ -468,9 +817,9 @@ export function ContactPage() {
       </section>
 
       {/* ═══════════════════════════════════════════
-          4. FAQ SECTION
+          8. FAQ SECTION
           ═══════════════════════════════════════════ */}
-      <section className="bg-white py-20">
+      <section className="bg-brand-gray py-20">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <FadeInSection>
             <div className="text-center mb-12 md:mb-14">
@@ -495,7 +844,7 @@ export function ContactPage() {
                 <AccordionItem
                   key={i}
                   value={`faq-${i}`}
-                  className="border-b border-brand-gray"
+                  className="border-b border-white"
                 >
                   <AccordionTrigger className="text-left text-base font-semibold text-brand-navy hover:text-brand-orange hover:no-underline py-5">
                     {faq.question}
@@ -511,7 +860,7 @@ export function ContactPage() {
       </section>
 
       {/* ═══════════════════════════════════════════
-          5. EMERGENCY CTA
+          9. EMERGENCY CTA
           ═══════════════════════════════════════════ */}
       <section className="bg-brand-navy py-16 relative overflow-hidden">
         {/* Decorative elements */}
@@ -542,6 +891,6 @@ export function ContactPage() {
           </FadeInSection>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

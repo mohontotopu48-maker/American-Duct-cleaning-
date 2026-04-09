@@ -245,3 +245,52 @@ Stage Summary:
 - Scrolling marquee shows all 24 cities as a trust ticker
 - Contact form in "Don't See Your Area" submits to /api/quote
 - Lint clean, dev server running successfully (GET / 200)
+
+---
+Task ID: 5
+Agent: Contact Page Enhancer
+Task: Rewrite ContactPage.tsx with 4 new sections and form enhancement
+
+Work Log:
+- Read worklog.md and reviewed existing ContactPage.tsx (5 sections), shared components, Router API, and UI library
+- Completely rewrote ContactPage.tsx with all 9 sections:
+  1. **Page Hero** (bg-brand-navy, breadcrumb, "Contact Us" badge, H1 "Get In Touch", subtitle, 3 decorative circles) — same as before with extra decorative blur element
+  2. **Our Promise** (NEW — after hero, before contact grid) — horizontal row of 4 trust elements on white bg with border-b
+     - Free Estimates Always (DollarSign), No Obligation (ShieldCheck), Response Within 1 Hour (Clock), 100% Satisfaction Guaranteed (CheckCircle2)
+     - Responsive grid: grid-cols-2 sm:2 lg:4 with centered icon cards, title, description
+  3. **Contact Grid** (enhanced) — same lg:2-col layout
+     - Left: Contact form card with all original fields PLUS "How did you hear about us?" Select (Google Search, Yelp, Referral, Social Media, Flyer/Mailer, Other)
+     - Right: 4 info cards (Phone, Email, Address, Hours) — same as before
+     - Form state now includes `referral` field, form resets all 7 fields on success
+  4. **Business Hours Table** (NEW — bg-brand-gray)
+     - Clean styled table with navy header row (Day / Hours columns)
+     - 7 rows with alternating colors (white and brand-gray/50): Mon-Fri 8AM-6PM, Sat 9AM-4PM, Sun Closed
+     - "Current Status" footer with live green "Open Now" or red "Closed" Badge
+     - usesBusinessStatus() custom hook with useEffect + setInterval for real-time updates
+  5. **Social Media Links** (NEW — bg-white)
+     - "Connect With Us" badge, "Follow Us" h2, subtitle paragraph
+     - 6 platform cards in grid-cols-2 sm:3 lg:6 grid: Facebook (f/blue), Instagram (IG/gradient), Google Business (G/blue), Yelp (Y!/red), Nextdoor (Nd/green), BBB (BBB/blue)
+     - Each card: colored initials div, platform name, tagline; hover transitions to dark navy bg with white text
+     - Links are "#" placeholders with proper aria-labels
+  6. **Map Visual** (NEW — bg-brand-gray)
+     - bg-brand-navy/5 rounded-2xl card with decorative grid pattern overlay (inline SVG data URI)
+     - Large orange MapPin icon in circle, "Orange County, CA" heading, subtitle
+     - "Get Directions" navy button linking to Google Maps (target="_blank" rel="noopener noreferrer") with ExternalLink and ArrowRight icons
+  7. **Why Choose Us** (same as before — 4 cards on white bg)
+  8. **FAQ Section** (same as before — 6 Q&As with Accordion on gray bg)
+  9. **Emergency CTA** (same as before — dark navy section)
+- Added new imports: useEffect from React, ExternalLink from lucide-react
+- Form state expanded to include `referral: ""` field
+- Created useBusinessStatus() hook: checks current day/hour against business schedule (Mon-Fri 8-6, Sat 9-4, Sun closed), updates every 60 seconds
+- All sections use FadeInSection with staggered delays for scroll-triggered animations
+- All fully responsive with mobile-first Tailwind breakpoints
+- ESLint passes clean with zero errors
+
+Stage Summary:
+- /home/z/my-project/src/components/pages/ContactPage.tsx completely rewritten with all 9 specified sections
+- 4 new sections added: Our Promise, Business Hours Table, Social Media Links, Map Visual
+- Contact form enhanced with "How did you hear about us?" referral select field
+- Live open/closed status badge using real-time business hours calculation
+- 6 social media platform cards with branded colors and hover effects
+- Map visual card with "Get Directions" external link to Google Maps
+- Lint clean, dev server running successfully (GET / 200)

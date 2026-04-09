@@ -1,11 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "@/components/shared/Router";
 import { FadeIn } from "@/components/shared/FadeIn";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Accordion,
   AccordionContent,
@@ -28,8 +31,11 @@ import {
   Clock,
   ThumbsUp,
   Star,
+  Send,
+  DollarSign,
 } from "lucide-react";
 import { LucideIcon } from "lucide-react";
+import { toast } from "sonner";
 
 interface ServiceData {
   slug: string;
@@ -397,14 +403,118 @@ const benefitIcons: LucideIcon[] = [
   Clock,
 ];
 
+const pricingMap: Record<string, string> = {
+  "air-duct-cleaning": "From $299",
+  "dryer-vent-cleaning": "From $149",
+  "hvac-cleaning": "From $399",
+  "mold-removal": "From $499",
+  "air-quality-testing": "From $199",
+};
+
+const serviceLabelMap: Record<string, string> = {
+  "air-duct-cleaning": "Air Duct Cleaning",
+  "dryer-vent-cleaning": "Dryer Vent Cleaning",
+  "hvac-cleaning": "HVAC System Cleaning",
+  "mold-removal": "Mold Inspection & Removal",
+  "air-quality-testing": "Indoor Air Quality Testing",
+};
+
+interface BeforeAfterData {
+  beforeItems: string[];
+  afterItems: string[];
+}
+
+const beforeAfterMap: Record<string, BeforeAfterData> = {
+  "air-duct-cleaning": {
+    beforeItems: [
+      "Dusty air blowing from vents causes sneezing and coughing",
+      "Higher energy bills from overworked HVAC systems",
+      "Musty odors linger in every room of your home",
+    ],
+    afterItems: [
+      "Fresh, clean air flows freely through every vent",
+      "Lower utility bills with an efficient HVAC system",
+      "Your home smells fresh and clean all day long",
+    ],
+  },
+  "dryer-vent-cleaning": {
+    beforeItems: [
+      "Clothes take 2-3 cycles to fully dry",
+      "Dangerous lint buildup creates a hidden fire hazard",
+      "Dryer runs hot and makes unusual noises",
+    ],
+    afterItems: [
+      "Clothes dry in a single cycle, saving time and energy",
+      "Fire hazard eliminated for complete peace of mind",
+      "Dryer runs quietly at safe, normal temperatures",
+    ],
+  },
+  "hvac-cleaning": {
+    beforeItems: [
+      "Uneven cooling and heating across different rooms",
+      "Skyrocketing energy bills from an inefficient system",
+      "Strange noises and frequent breakdowns",
+    ],
+    afterItems: [
+      "Consistent, comfortable temperatures in every room",
+      "Reduced energy costs with a system running at peak performance",
+      "Quiet, reliable operation year after year",
+    ],
+  },
+  "mold-removal": {
+    beforeItems: [
+      "Persistent musty smell when the HVAC runs",
+      "Family members experiencing unexplained allergy symptoms",
+      "Visible mold spots around vent covers and ductwork",
+    ],
+    afterItems: [
+      "Clean, fresh air with no musty or earthy odors",
+      "Relief from allergy symptoms and respiratory irritation",
+      "Spotless ductwork protected by antimicrobial sealant",
+    ],
+  },
+  "air-quality-testing": {
+    beforeItems: [
+      "Unknown pollutants circulating in your home's air",
+      "No data to make informed decisions about your air quality",
+      "Unexplained health symptoms with no clear cause",
+    ],
+    afterItems: [
+      "Complete understanding of your home's air quality status",
+      "Data-driven report with clear pollutant levels and thresholds",
+      "Expert action plan to address any issues found",
+    ],
+  },
+};
+
+const relatedDescMap: Record<string, string> = {
+  "air-duct-cleaning":
+    "Remove dust, allergens, and debris from your entire duct system for cleaner air.",
+  "dryer-vent-cleaning":
+    "Eliminate dangerous lint buildup and reduce fire risk from your dryer vent.",
+  "hvac-cleaning":
+    "Restore your HVAC system to peak efficiency with deep component cleaning.",
+  "mold-removal":
+    "Professional mold inspection and remediation to protect your family's health.",
+  "air-quality-testing":
+    "Comprehensive air testing to identify hidden pollutants in your home.",
+};
+
 export function ServiceDetailPage({ slug }: { slug: string }) {
   const { navigate } = useRouter();
 
   const service = servicesData.find((s) => s.slug === slug);
 
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: "",
+    email: "",
+  });
+  const [formLoading, setFormLoading] = useState(false);
+
   if (!service) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-brand-gray">
+      <div className="min-h-screen flex items-center justify-center bg-brand-gray">
         <div className="text-center px-4">
           <div className="bg-brand-orange/10 p-4 rounded-2xl w-fit mx-auto mb-6">
             <Search className="h-10 w-10 text-brand-orange" />
@@ -413,8 +523,8 @@ export function ServiceDetailPage({ slug }: { slug: string }) {
             Service Not Found
           </h1>
           <p className="text-brand-muted text-lg mb-8 max-w-md mx-auto">
-            We couldn&apos;t find the service you&apos;re looking for. Please browse
-            our available services below.
+            We couldn&apos;t find the service you&apos;re looking for. Please
+            browse our available services below.
           </p>
           <Button
             onClick={() => navigate({ page: "services" })}
@@ -424,14 +534,54 @@ export function ServiceDetailPage({ slug }: { slug: string }) {
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
-      </main>
+      </div>
     );
   }
 
   const IconComponent = service.icon;
+  const price = pricingMap[service.slug] || "Contact Us";
+  const serviceLabel = serviceLabelMap[service.slug] || service.title;
+  const beforeAfter = beforeAfterMap[service.slug] || {
+    beforeItems: ["Dirty, contaminated system affecting your home", "Higher costs from inefficiency", "Health risks for your family"],
+    afterItems: ["Clean, efficient system running perfectly", "Lower costs and better performance", "Healthier indoor environment"],
+  };
+
+  const relatedServices = servicesData.filter((s) => s.slug !== service.slug).slice(0, 3);
+
+  const handleQuoteSubmit = async () => {
+    if (!formData.name.trim() || !formData.phone.trim()) {
+      toast.error("Please fill in your name and phone number.");
+      return;
+    }
+
+    setFormLoading(true);
+    try {
+      const res = await fetch("/api/quote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          phone: formData.phone.trim(),
+          email: formData.email.trim() || undefined,
+          service: service.title,
+        }),
+      });
+
+      if (res.ok) {
+        toast.success("Quote request sent! We'll contact you shortly.");
+        setFormData({ name: "", phone: "", email: "" });
+      } else {
+        toast.error("Something went wrong. Please try again or call us.");
+      }
+    } catch {
+      toast.error("Network error. Please try again or call us directly.");
+    } finally {
+      setFormLoading(false);
+    }
+  };
 
   return (
-    <main className="min-h-screen">
+    <div className="min-h-screen">
       {/* ─── Hero Banner ─── */}
       <section className="relative bg-brand-navy pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden">
         {/* Decorative elements */}
@@ -457,7 +607,9 @@ export function ServiceDetailPage({ slug }: { slug: string }) {
                   Services
                 </button>
                 <ChevronRight className="h-3.5 w-3.5" />
-                <span className="text-white">{service.title.replace("Professional ", "")}</span>
+                <span className="text-white">
+                  {service.title.replace("Professional ", "")}
+                </span>
               </nav>
 
               {/* Icon */}
@@ -499,55 +651,190 @@ export function ServiceDetailPage({ slug }: { slug: string }) {
         </div>
       </section>
 
-      {/* ─── Problem Section ─── */}
+      {/* ─── Pricing Section ─── */}
+      <section className="py-16 md:py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FadeIn>
+            <div className="max-w-lg mx-auto">
+              <Card className="border-2 border-brand-orange/20 shadow-lg overflow-hidden">
+                <CardContent className="p-8 md:p-10 text-center">
+                  <div className="bg-brand-orange/10 w-fit mx-auto p-3 rounded-xl mb-5">
+                    <DollarSign className="h-8 w-8 text-brand-orange" />
+                  </div>
+                  <p className="text-sm font-medium text-brand-muted uppercase tracking-wider mb-2">
+                    {serviceLabel}
+                  </p>
+                  <p className="text-4xl md:text-5xl font-bold text-brand-orange mb-4">
+                    {price}
+                  </p>
+                  <p className="text-sm text-brand-muted mb-8">
+                    *Actual price depends on home size and condition. Free
+                    estimate provided.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button
+                      onClick={() => navigate({ page: "contact" })}
+                      className="bg-brand-orange hover:bg-brand-orange-hover text-white font-semibold"
+                    >
+                      Get Free Quote
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      asChild
+                      className="border-brand-navy/20 text-brand-navy hover:bg-brand-navy/5"
+                    >
+                      <a href="tel:+17145550123">
+                        <Phone className="mr-2 h-4 w-4" />
+                        Call (714) 555-0123
+                      </a>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </FadeIn>
+        </div>
+      </section>
+
+      {/* ─── Problem Section (with Sidebar Quick Quote Form) ─── */}
       <section className="py-20 md:py-28 bg-brand-gray">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-start">
-            <FadeIn>
-              <div>
-                <Badge
-                  variant="secondary"
-                  className="mb-4 bg-red-50 text-red-600 hover:bg-red-50 border-0 px-4 py-1.5"
-                >
-                  The Problem
-                </Badge>
-                <h2 className="text-3xl md:text-4xl font-bold text-brand-navy mb-6 leading-tight">
-                  Why This Service Matters
-                </h2>
-                <p className="text-brand-muted text-lg leading-relaxed mb-8">
-                  {service.problem}
-                </p>
-                <Button
-                  onClick={() => navigate({ page: "contact" })}
-                  className="bg-brand-orange hover:bg-brand-orange-hover text-white font-semibold"
-                >
-                  Schedule Your Service
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            </FadeIn>
-
-            <FadeIn delay={0.2}>
-              <div className="space-y-4">
-                <h3 className="text-lg font-bold text-brand-navy mb-2 flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5 text-red-500" />
-                  Warning Signs
-                </h3>
-                {service.warnings.map((warning, i) => (
-                  <div
-                    key={i}
-                    className="bg-white rounded-xl p-5 shadow-sm flex items-start gap-4"
+          <div className="grid lg:grid-cols-3 gap-12 items-start">
+            {/* Left: Problem text + Warnings */}
+            <div className="lg:col-span-2">
+              <FadeIn>
+                <div>
+                  <Badge
+                    variant="secondary"
+                    className="mb-4 bg-red-50 text-red-600 hover:bg-red-50 border-0 px-4 py-1.5"
                   >
-                    <div className="bg-red-50 p-2 rounded-lg shrink-0 mt-0.5">
-                      <AlertTriangle className="h-4 w-4 text-red-500" />
+                    The Problem
+                  </Badge>
+                  <h2 className="text-3xl md:text-4xl font-bold text-brand-navy mb-6 leading-tight">
+                    Why This Service Matters
+                  </h2>
+                  <p className="text-brand-muted text-lg leading-relaxed mb-8">
+                    {service.problem}
+                  </p>
+                </div>
+              </FadeIn>
+
+              <FadeIn delay={0.15}>
+                <div className="space-y-4">
+                  <h3 className="text-lg font-bold text-brand-navy mb-2 flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-red-500" />
+                    Warning Signs
+                  </h3>
+                  {service.warnings.map((warning, i) => (
+                    <div
+                      key={i}
+                      className="bg-white rounded-xl p-5 shadow-sm flex items-start gap-4"
+                    >
+                      <div className="bg-red-50 p-2 rounded-lg shrink-0 mt-0.5">
+                        <AlertTriangle className="h-4 w-4 text-red-500" />
+                      </div>
+                      <p className="text-sm text-brand-dark leading-relaxed">
+                        {warning}
+                      </p>
                     </div>
-                    <p className="text-sm text-brand-dark leading-relaxed">
-                      {warning}
+                  ))}
+                </div>
+              </FadeIn>
+            </div>
+
+            {/* Right: Quick Quote Form Sidebar */}
+            <div className="lg:col-span-1">
+              <FadeIn delay={0.2}>
+                <Card className="border-0 shadow-lg sticky top-24 overflow-hidden">
+                  <div className="bg-brand-navy p-6">
+                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                      <Send className="h-5 w-5 text-brand-orange" />
+                      Get a Quick Quote
+                    </h3>
+                    <p className="text-white/70 text-sm mt-1">
+                      Fill out the form and we&apos;ll get back to you within 1
+                      hour.
                     </p>
                   </div>
-                ))}
-              </div>
-            </FadeIn>
+                  <CardContent className="p-6 space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="quote-name" className="text-sm font-medium text-brand-navy">
+                        Name <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="quote-name"
+                        placeholder="Your full name"
+                        value={formData.name}
+                        onChange={(e) =>
+                          setFormData((prev) => ({ ...prev, name: e.target.value }))
+                        }
+                        className="border-brand-navy/10 focus:border-brand-orange"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="quote-phone" className="text-sm font-medium text-brand-navy">
+                        Phone <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="quote-phone"
+                        type="tel"
+                        placeholder="(XXX) XXX-XXXX"
+                        value={formData.phone}
+                        onChange={(e) =>
+                          setFormData((prev) => ({ ...prev, phone: e.target.value }))
+                        }
+                        className="border-brand-navy/10 focus:border-brand-orange"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="quote-email" className="text-sm font-medium text-brand-navy">
+                        Email
+                      </Label>
+                      <Input
+                        id="quote-email"
+                        type="email"
+                        placeholder="your@email.com"
+                        value={formData.email}
+                        onChange={(e) =>
+                          setFormData((prev) => ({ ...prev, email: e.target.value }))
+                        }
+                        className="border-brand-navy/10 focus:border-brand-orange"
+                      />
+                    </div>
+
+                    <div className="bg-brand-orange/5 rounded-lg p-3 flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-brand-orange shrink-0 mt-0.5" />
+                      <p className="text-xs text-brand-muted">
+                        Service pre-filled: <span className="font-semibold text-brand-navy">{service.title}</span>
+                      </p>
+                    </div>
+
+                    <Button
+                      onClick={handleQuoteSubmit}
+                      disabled={formLoading}
+                      className="w-full bg-brand-orange hover:bg-brand-orange-hover text-white font-semibold py-5"
+                    >
+                      {formLoading ? (
+                        <span className="flex items-center gap-2">
+                          <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Sending...
+                        </span>
+                      ) : (
+                        <>
+                          Request Quote
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </>
+                      )}
+                    </Button>
+
+                    <p className="text-xs text-center text-brand-muted">
+                      Free estimate. No obligation.
+                    </p>
+                  </CardContent>
+                </Card>
+              </FadeIn>
+            </div>
           </div>
         </div>
       </section>
@@ -588,8 +875,77 @@ export function ServiceDetailPage({ slug }: { slug: string }) {
         </div>
       </section>
 
-      {/* ─── Process Section ─── */}
+      {/* ─── Before & After Section ─── */}
       <section className="py-20 md:py-28 bg-brand-gray">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FadeIn>
+            <SectionHeading
+              badge="Transformation"
+              title="Before & After"
+              description="See the difference professional cleaning makes for your home."
+            />
+          </FadeIn>
+
+          <div className="grid md:grid-cols-2 gap-6 md:gap-8 max-w-5xl mx-auto">
+            {/* Before Card */}
+            <FadeIn delay={0.1}>
+              <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-red-50 to-red-100 border border-red-200/50 p-8 md:p-10 h-full">
+                <div className="absolute top-4 right-4 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                  Before
+                </div>
+                <div className="bg-red-500/10 p-3 rounded-xl w-fit mb-6">
+                  <AlertTriangle className="h-7 w-7 text-red-500" />
+                </div>
+                <h3 className="text-xl md:text-2xl font-bold text-red-800 mb-6">
+                  Before Cleaning
+                </h3>
+                <ul className="space-y-4">
+                  {beforeAfter.beforeItems.map((item, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <div className="bg-red-500 rounded-full p-0.5 mt-1 shrink-0">
+                        <span className="block w-2.5 h-2.5 rounded-full bg-white" />
+                      </div>
+                      <span className="text-red-700 text-sm md:text-base leading-relaxed">
+                        {item}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </FadeIn>
+
+            {/* After Card */}
+            <FadeIn delay={0.2}>
+              <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200/50 p-8 md:p-10 h-full">
+                <div className="absolute top-4 right-4 bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                  After
+                </div>
+                <div className="bg-emerald-500/10 p-3 rounded-xl w-fit mb-6">
+                  <CheckCircle2 className="h-7 w-7 text-emerald-500" />
+                </div>
+                <h3 className="text-xl md:text-2xl font-bold text-emerald-800 mb-6">
+                  After Cleaning
+                </h3>
+                <ul className="space-y-4">
+                  {beforeAfter.afterItems.map((item, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <div className="bg-emerald-500 rounded-full p-0.5 mt-1 shrink-0">
+                        <span className="block w-2.5 h-2.5 rounded-full bg-white" />
+                      </div>
+                      <span className="text-emerald-700 text-sm md:text-base leading-relaxed">
+                        {item}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </FadeIn>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Process Section ─── */}
+      <section className="py-20 md:py-28 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <FadeIn>
             <SectionHeading
@@ -625,7 +981,7 @@ export function ServiceDetailPage({ slug }: { slug: string }) {
       </section>
 
       {/* ─── FAQ Section ─── */}
-      <section className="py-20 md:py-28 bg-white">
+      <section className="py-20 md:py-28 bg-brand-gray">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <FadeIn>
             <SectionHeading
@@ -648,6 +1004,47 @@ export function ServiceDetailPage({ slug }: { slug: string }) {
               ))}
             </Accordion>
           </FadeIn>
+        </div>
+      </section>
+
+      {/* ─── Related Services Section ─── */}
+      <section className="py-20 md:py-28 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FadeIn>
+            <SectionHeading
+              badge="Explore"
+              title="You May Also Need"
+              description="Comprehensive solutions to keep your home's air clean and safe."
+            />
+          </FadeIn>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {relatedServices.map((rel, i) => {
+              const RelIcon = rel.icon;
+              return (
+                <FadeIn key={rel.slug} delay={i * 0.1}>
+                  <Card className="border border-brand-navy/5 shadow-sm hover:shadow-lg hover:border-brand-orange/20 transition-all duration-300 h-full group cursor-pointer"
+                    onClick={() => navigate("service-detail", rel.slug)}
+                  >
+                    <CardContent className="p-6 md:p-8">
+                      <div className="bg-brand-orange/10 group-hover:bg-brand-orange/20 p-3 rounded-xl w-fit mb-4 transition-colors">
+                        <RelIcon className="h-6 w-6 text-brand-orange" />
+                      </div>
+                      <h3 className="text-lg font-bold text-brand-navy mb-2">
+                        {rel.title.replace("Professional ", "")}
+                      </h3>
+                      <p className="text-brand-muted text-sm leading-relaxed mb-4">
+                        {relatedDescMap[rel.slug] || rel.problem.slice(0, 120) + "..."}
+                      </p>
+                      <span className="inline-flex items-center text-sm font-semibold text-brand-orange group-hover:gap-2 transition-all">
+                        Learn More
+                        <ArrowRight className="ml-1 h-4 w-4" />
+                      </span>
+                    </CardContent>
+                  </Card>
+                </FadeIn>
+              );
+            })}
+          </div>
         </div>
       </section>
 

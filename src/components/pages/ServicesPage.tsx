@@ -233,7 +233,7 @@ export function ServicesPage() {
   const { navigate } = useRouter();
 
   return (
-    <main className="min-h-screen">
+    <div className="min-h-screen">
       {/* ═══════════════════════════════════════════════════════════
           SECTION 1 — Hero Banner
       ═══════════════════════════════════════════════════════════ */}
@@ -747,6 +747,6 @@ export function ServicesPage() {
           </FadeIn>
         </div>
       </section>
-    </main>
+    </div>
   );
 }
