@@ -51,7 +51,8 @@ export async function POST(request: NextRequest) {
     let response: string;
 
     try {
-      const ZAI = (await import("z-ai-web-dev-sdk")).default;
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const ZAI = require("z-ai-web-dev-sdk").default;
       const zai = await ZAI.create();
 
       const messages: Array<{ role: string; content: string }> = [
@@ -70,6 +71,7 @@ export async function POST(request: NextRequest) {
 
       const completion = await zai.chat.completions.create({
         messages,
+        stream: false,
         thinking: { type: "disabled" },
       });
 
