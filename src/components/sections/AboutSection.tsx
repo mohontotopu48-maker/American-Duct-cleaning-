@@ -4,11 +4,9 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import {
   Award,
-  Users,
   ShieldCheck,
   Leaf,
   Heart,
-  CheckCircle2,
   Star,
 } from "lucide-react";
 

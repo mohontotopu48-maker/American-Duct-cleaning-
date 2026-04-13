@@ -8,7 +8,6 @@ import {
   Clock,
   Facebook,
   Instagram,
-  ExternalLink,
 } from "lucide-react";
 
 const quickLinks = [

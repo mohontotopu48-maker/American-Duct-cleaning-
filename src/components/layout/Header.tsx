@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import { Menu, Phone, X } from "lucide-react";
+import { Menu, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,

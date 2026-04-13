@@ -10,7 +10,6 @@ import {
   Search,
   Sparkles,
   Smile,
-  ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
