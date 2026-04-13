@@ -1,26 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowUp } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { QuoteDialog } from "@/components/QuoteDialog";
-import { HeroSection } from "@/components/sections/HeroSection";
-import { ServicesSection } from "@/components/sections/ServicesSection";
-import { AboutSection } from "@/components/sections/AboutSection";
-import { WhyChooseSection } from "@/components/sections/WhyChooseSection";
-import { ServiceAreasSection } from "@/components/sections/ServiceAreasSection";
-import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
-import { FAQSection } from "@/components/sections/FAQSection";
-import { ContactSection } from "@/components/sections/ContactSection";
-import { CTASection } from "@/components/sections/CTASection";
+import { ChatWidget } from "@/components/chat/ChatWidget";
+import { HomePage } from "@/components/pages/HomePage";
+import { ServicesPage } from "@/components/pages/ServicesPage";
+import { AboutPage } from "@/components/pages/AboutPage";
+import { WhyUsPage } from "@/components/pages/WhyUsPage";
+import { AreasPage } from "@/components/pages/AreasPage";
+import { ContactPage } from "@/components/pages/ContactPage";
+import { useHashRouter, type PageHash } from "@/lib/useHashRouter";
+import { pageTransition } from "@/lib/animations";
+import { useState, useEffect } from "react";
 
 export default function Home() {
-  const [quoteOpen, setQuoteOpen] = useState(false);
+  const { currentPage, navigate } = useHashRouter();
   const [showBackToTop, setShowBackToTop] = useState(false);
-
-  const openQuote = () => setQuoteOpen(true);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -34,28 +31,46 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const renderPage = () => {
+    switch (currentPage) {
+      case "home":
+        return <HomePage navigate={navigate} />;
+      case "services":
+        return <ServicesPage navigate={navigate} />;
+      case "about":
+        return <AboutPage />;
+      case "why-us":
+        return <WhyUsPage navigate={navigate} />;
+      case "areas":
+        return <AreasPage navigate={navigate} />;
+      case "contact":
+        return <ContactPage />;
+      default:
+        return <HomePage navigate={navigate} />;
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
-      <Header onOpenQuote={openQuote} />
+      <Header currentPage={currentPage} navigate={navigate} />
       <main className="flex-1">
-        <HeroSection onOpenQuote={openQuote} />
-        <ServicesSection />
-        <AboutSection />
-        <WhyChooseSection />
-        <ServiceAreasSection />
-        <TestimonialsSection />
-        <FAQSection />
-        <ContactSection />
-        <CTASection onOpenQuote={openQuote} />
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentPage}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            variants={pageTransition}
+          >
+            {renderPage()}
+          </motion.div>
+        </AnimatePresence>
       </main>
-      <Footer />
-      <QuoteDialog
-        open={quoteOpen}
-        onOpenChange={setQuoteOpen}
-        defaultService=""
-      />
+      <Footer navigate={navigate} />
 
-      {/* Back to Top Button */}
+      <ChatWidget navigate={navigate} />
+
+      {/* Back to Top */}
       <AnimatePresence>
         {showBackToTop && (
           <motion.button
@@ -63,10 +78,10 @@ export default function Home() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={scrollToTop}
-            className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-brand-orange hover:bg-brand-orange-hover text-white shadow-lg shadow-brand-orange/25 flex items-center justify-center transition-all"
+            className="fixed bottom-6 right-20 z-50 w-11 h-11 rounded-full bg-brand-navy hover:bg-brand-navy-light text-white shadow-lg flex items-center justify-center transition-colors"
             aria-label="Back to top"
           >
-            <ArrowUp className="w-5 h-5" />
+            <ArrowUp className="w-4 h-4" />
           </motion.button>
         )}
       </AnimatePresence>
